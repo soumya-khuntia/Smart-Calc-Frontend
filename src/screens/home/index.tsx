@@ -28,7 +28,6 @@ export default function Home() {
   const [isErasing, setIsErasing] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
 
-
   useEffect(() => {
     if (reset) {
       resetCanvas();
@@ -61,6 +60,9 @@ export default function Home() {
       if (ctx) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - canvas.offsetTop;
+        // Set the initial background color to black
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.lineCap = "round";
         ctx.lineWidth = 3;
       }
@@ -89,7 +91,25 @@ export default function Home() {
   }, []);
 
   const renderLatexToCanvas = (expression: string, answer: string) => {
-    const latex = `\\(\\LARGE{${expression} = ${answer}}\\)`;
+    // Helper function to handle spaces and format mixed content
+    const formatLatex = (expr: string) => {
+      return expr
+        .split(" ") // Split expression by spaces
+        .map((part) => {
+          // If part contains math (like variables or operators), wrap it in math mode
+          if (/[\+\-\*\/\=]/.test(part) || /\d/.test(part)) {
+            return `\\mathrm{${part}}`; // Use \mathrm for text-like math
+          }
+          // Else, assume it's text and wrap it in \text{}
+          return `\\text{${part}}`;
+        })
+        .join("\\ ");
+    };
+
+    const formattedExpression = formatLatex(expression); // Format the expression
+    const latex = `\\(\\LARGE{${formattedExpression} = ${answer}}\\)`; // Create LaTeX string
+
+    // Set the formatted LaTeX expression for rendering
     setLatexExpression([...latexExpression, latex]);
 
     // Clear the main canvas
@@ -112,7 +132,7 @@ export default function Home() {
           method: "post",
           url: `${import.meta.env.VITE_API_URL}/calculate`,
           data: {
-            image: canvas.toDataURL("image/png"),
+            image: canvas.toDataURL("image/png", 0.7),
             dict_of_vars: dictOfVars,
           },
         });
@@ -162,6 +182,7 @@ export default function Home() {
         });
       } catch (error) {
         console.error("Error:", error);
+        alert("Calculation failed. Please try again.");
       } finally {
         setIsCalculating(false);
       }
@@ -199,11 +220,11 @@ export default function Home() {
       const ctx = canvas.getContext("2d");
       if (ctx) {
         if (isErasing) {
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "rgba(0,0,0,1)";
           ctx.lineWidth = 20; // Adjust eraser size as needed
         } else {
-          ctx.globalCompositeOperation = 'source-over';
+          ctx.globalCompositeOperation = "source-over";
           ctx.strokeStyle = color;
           ctx.lineWidth = 3;
         }
@@ -214,18 +235,17 @@ export default function Home() {
       }
     }
   };
-  
+
   const stopDrawing = () => {
     setIsDrawing(false);
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalCompositeOperation = "source-over";
       }
     }
   };
-  
 
   return (
     <>
@@ -243,7 +263,7 @@ export default function Home() {
             onClick={() => setIsErasing(!isErasing)}
             className={`z-20 rounded-full w-1/2 ${
               isErasing ? "bg-green-500" : "bg-red-500"
-            } text-white`}
+            } text-white hover:${isErasing ? "bg-green-600" : "bg-red-600"}`}
             variant="default"
             color="black"
           >
@@ -256,13 +276,17 @@ export default function Home() {
               key={swatch}
               color={swatch}
               onClick={() => setColor(swatch)}
-              className="w-6 h-6 sm:w-8 sm:h-8"
+              className={`w-6 h-6 sm:w-8 sm:h-8 ${
+                color === swatch ? "ring-2 ring-offset-2 ring-blue-500" : ""
+              }`}
             />
           ))}
         </Group>
         <Button
           onClick={runRoute}
-          className={`z-20 bg-blue-600 text-white w-full sm:w-1/2 rounded-full ${isCalculating ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`z-20 bg-blue-600 text-white w-full sm:w-1/2 rounded-full ${
+            isCalculating ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           variant="default"
           color="white"
           disabled={isCalculating}
@@ -270,7 +294,6 @@ export default function Home() {
           {isCalculating ? "Calculating..." : "Run"}
         </Button>
       </div>
-
 
       <canvas
         ref={canvasRef}
@@ -290,7 +313,9 @@ export default function Home() {
             onStop={(_, data) => setLatexPosition({ x: data.x, y: data.y })}
           >
             <div className="absolute p-2 text-white rounded shadow-md cursor-pointer">
-              <div className="latex-content text-sm sm:text-base md:text-lg">{latex}</div>
+              <div className="latex-content text-sm sm:text-base md:text-lg">
+                {latex}
+              </div>
             </div>
           </Draggable>
         ))}

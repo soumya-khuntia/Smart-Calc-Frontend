@@ -9,7 +9,6 @@ const SWATCHES = [
     "#40c057",  // green
     "#00aa00",  // dark green
     "#fab005",  // yellow
-    "#fd7e14",  // orange
 ];
   
 export { SWATCHES };
