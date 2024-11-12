@@ -303,6 +303,31 @@ export default function Home() {
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseOut={stopDrawing}
+        onTouchStart={(e: React.TouchEvent<HTMLCanvasElement>) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          const rect = e.currentTarget.getBoundingClientRect();
+          const mouseEvent = {
+            nativeEvent: {
+              offsetX: touch.clientX - rect.left,
+              offsetY: touch.clientY - rect.top,
+            },
+          } as React.MouseEvent<HTMLCanvasElement>;
+          startDrawing(mouseEvent);
+        }}
+        onTouchMove={(e: React.TouchEvent<HTMLCanvasElement>) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          const rect = e.currentTarget.getBoundingClientRect();
+          const mouseEvent = {
+            nativeEvent: {
+              offsetX: touch.clientX - rect.left,
+              offsetY: touch.clientY - rect.top,
+            },
+          } as React.MouseEvent<HTMLCanvasElement>;
+          draw(mouseEvent);
+        }}
+        onTouchEnd={stopDrawing}
       />
 
       {latexExpression &&
