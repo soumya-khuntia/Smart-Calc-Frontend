@@ -122,9 +122,33 @@ export default function Home() {
     }
   };
 
-  const runRoute = async () => {
-    setIsCalculating(true);
+  const isCanvasEmpty = () => {
     const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Check if any pixel is non-black (assuming black background)
+      for (let i = 0; i < data.length; i += 4) {
+        // Check RGB values (skip alpha channel)
+        if (data[i] !== 0 || data[i + 1] !== 0 || data[i + 2] !== 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return true;
+  }
+
+  const runRoute = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || isCanvasEmpty()) {
+      alert("Please draw something before calculating");
+      return;
+    }
+    
+    setIsCalculating(true);
 
     if (canvas) {
       try {
