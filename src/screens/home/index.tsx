@@ -257,7 +257,6 @@ export default function Home() {
             onClick={() => setReset(true)}
             className="z-20 bg-gray-500 text-white w-1/2 rounded-full"
             variant="default"
-            color="black"
           >
             Reset
           </Button>
